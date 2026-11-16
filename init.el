@@ -1,8 +1,8 @@
-;; -*- lexical-binding: t; -*-
+;;; init.el --- Personal configuration -*- lexical-binding: t; -*-
+;;; Encoding
 (set-language-environment "UTF-8")
-(set-default-coding-systems 'utf-8)
-(prefer-coding-system 'utf-8)
 
+;;; Packages
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -10,17 +10,33 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; Keep Customize's auto-generated code out of this file.
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(load custom-file 'noerror 'nomessage)
+
+;;; Server
 (require 'server)
 (unless (server-running-p)
   (server-start))
 
-(add-to-list 'default-frame-alist '(font . "FiraCode Nerd Font 14"))
+;;; Appearance
+(add-to-list 'default-frame-alist '(font . "FiraCode Nerd Font-14"))
+
+(use-package ef-themes
+  :config
+  (load-theme 'ef-owl t))
 
 (use-package nerd-icons)
 
 (use-package nerd-icons-dired
   :hook (dired-mode . nerd-icons-dired-mode))
 
+;;; Editing
+(use-package evil
+  :config
+  (evil-mode 1))
+
+;;; Completion
 (use-package vertico
   :init
   (vertico-mode))
@@ -32,18 +48,7 @@
 
 (use-package corfu
   :init
-  (global-corfu-mode)
-  )
-
-(use-package emacs
-  :ensure nil
-  :custom
-  (context-menu-mode t)
-  (enable-recursive-minibuffers t)
-  (tab-always-indent 'complete)
-  (read-extended-command-predicate #'command-completion-default-include-p)
-  (minibuffer-prompt-properties
-   '(read-only t cursor-intangible t face minibuffer-prompt)))
+  (global-corfu-mode))
 
 (use-package orderless
   :custom
@@ -52,23 +57,51 @@
   (completion-category-defaults nil)
   (completion-pcm-leading-wildcard t))
 
-;; Performance tuning required by lsp-mode
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024))
+(use-package emacs
+  :ensure nil
+  :hook (minibuffer-setup . cursor-intangible-mode) ; makes the prompt property below work
+  :custom
+  (context-menu-mode t)
+  (enable-recursive-minibuffers t)
+  (tab-always-indent 'complete)
+  (read-extended-command-predicate #'command-completion-default-include-p)
+  (minibuffer-prompt-properties
+   '(read-only t cursor-intangible t face minibuffer-prompt)))
 
 (use-package which-key
   :init
   (which-key-mode))
 
+;;; Tree-sitter (C / C++)
+;; Install grammars once with: M-x treesit-install-language-grammar RET c / cpp
+(use-package treesit
+  :ensure nil
+  :custom
+  (treesit-font-lock-level 4)
+  :init
+  (setq treesit-language-source-alist
+        '((c   "https://github.com/tree-sitter/tree-sitter-c")
+          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")))
+  ;; Use the *-ts-mode variants; .c/.cpp/.h etc. keep working via the
+  ;; default auto-mode-alist entries.
+  (dolist (entry '((c-mode        . c-ts-mode)
+                   (c++-mode      . c++-ts-mode)
+                   (c-or-c++-mode . c-or-c++-ts-mode)))
+    (add-to-list 'major-mode-remap-alist entry)))
+
+;;; LSP
+;; Performance tuning recommended by lsp-mode
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024))
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
-  :hook (
-         (c-ts-mode . lsp-deferred)
+  :hook ((c-ts-mode   . lsp-deferred)
          (c++-ts-mode . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
+         (lsp-mode    . lsp-enable-which-key-integration))
   :custom
-  (lsp-completion-provider :none)
+  (lsp-completion-provider :none) ; completion is handled by corfu + orderless
   (lsp-clients-clangd-args '("--background-index"
                              "--clang-tidy"
                              "--header-insertion=iwyu"
@@ -79,59 +112,12 @@
             (lambda ()
               (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
                     '(orderless)))))
+
 (use-package lsp-ui
   :commands lsp-ui-mode
   :custom
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-position 'at-point)
-  (lsp-ui-sideline-show-diagnostics t))
+  (lsp-ui-doc-position 'at-point))
+
 (use-package lsp-treemacs
-  :after (lsp-mode treemacs)
+  :after lsp-mode
   :commands lsp-treemacs-errors-list)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("b89b6d95670712b8742f4391416483a29d4315323a218600590160e132c70ec8"
-     default))
- '(package-selected-packages
-   '(corfu ef-themes evil nerd-icons nerd-icons-dired orderless
-	   tree-sitter treemacs vertico)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
-(use-package ef-themes
-  :config
-  (load-theme 'ef-owl t))
-
-(evil-mode)
-
-;; Tree-sitter configuration for C and C++
-(use-package treesit
-  :ensure nil
-  :mode (("\\.cpp\\'" . c++-ts-mode)
-         ("\\.hpp\\'" . c++-ts-mode)
-         ("\\.cc\\'"  . c++-ts-mode)
-         ("\\.hh\\'"  . c++-ts-mode)
-         ("\\.cxx\\'" . c++-ts-mode)
-         ("\\.hxx\\'" . c++-ts-mode)
-         ("\\.c\\'"   . c-ts-mode))
-  :custom
-  (treesit-font-lock-level 4) ; Maximum syntax highlighting detail (1-4)
-  :init
-  ;; Register grammar repositories
-  (setq treesit-language-source-alist
-        '((c   "https://github.com/tree-sitter/tree-sitter-c")
-          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")))
-  ;; Remap standard C/C++ modes to their Tree-sitter equivalents
-  (setq major-mode-remap-alist
-        '((c-mode          . c-ts-mode)
-          (c++-mode        . c++-ts-mode)
-          (c-or-c++-mode   . c-or-c++-ts-mode))))
