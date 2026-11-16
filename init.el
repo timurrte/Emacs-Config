@@ -14,6 +14,11 @@
 (setq custom-file (locate-user-emacs-file "custom.el"))
 (load custom-file 'noerror 'nomessage)
 
+;; Store Emacs backup and auto-save files in the global config directory
+(setq backup-directory-alist `(("." . ,(locate-user-emacs-file "backups/")))
+      auto-save-file-name-transforms `((".*" ,(locate-user-emacs-file "auto-save/") t))
+      create-lockfiles nil)
+
 ;;; Server
 (require 'server)
 (unless (server-running-p)
@@ -102,6 +107,7 @@
          (lsp-mode    . lsp-enable-which-key-integration))
   :custom
   (lsp-completion-provider :none) ; completion is handled by corfu + orderless
+  (lsp-clients-clangd-executable "C:/Program Files/LLVM/bin/clangd.exe")
   (lsp-clients-clangd-args '("--background-index"
                              "--clang-tidy"
                              "--header-insertion=iwyu"
