@@ -107,7 +107,7 @@
          (lsp-mode    . lsp-enable-which-key-integration))
   :custom
   (lsp-completion-provider :none) ; completion is handled by corfu + orderless
-  (lsp-clients-clangd-executable "C:/Program Files/LLVM/bin/clangd.exe")
+  (lsp-clients-clangd-executable (when (eq system-type 'windows-nt) "C:/Program Files/LLVM/bin/clangd.exe"))
   (lsp-clients-clangd-args '("--background-index"
                              "--clang-tidy"
                              "--header-insertion=iwyu"
