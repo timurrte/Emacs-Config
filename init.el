@@ -21,9 +21,6 @@
 (use-package nerd-icons-dired
   :hook (dired-mode . nerd-icons-dired-mode))
 
-(setq auto-save-file-name-transforms
-          `((".*" ,(concat user-emacs-directory "auto-save/") t))) 
-
 (use-package vertico
   :init
   (vertico-mode))
@@ -33,11 +30,17 @@
   :init
   (savehist-mode))
 
+(use-package corfu
+  :init
+  (global-corfu-mode)
+  )
+
 (use-package emacs
   :ensure nil
   :custom
   (context-menu-mode t)
   (enable-recursive-minibuffers t)
+  (tab-always-indent 'complete)
   (read-extended-command-predicate #'command-completion-default-include-p)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt)))
@@ -48,6 +51,44 @@
   (completion-category-overrides '((file (styles partial-completion))))
   (completion-category-defaults nil)
   (completion-pcm-leading-wildcard t))
+
+;; Performance tuning required by lsp-mode
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024))
+
+(use-package which-key
+  :init
+  (which-key-mode))
+
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (
+         (c-ts-mode . lsp-deferred)
+         (c++-ts-mode . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration))
+  :custom
+  (lsp-completion-provider :none)
+  (lsp-clients-clangd-args '("--background-index"
+                             "--clang-tidy"
+                             "--header-insertion=iwyu"
+                             "--completion-style=detailed"
+                             "--compile-commands-dir=build"))
+  :config
+  (add-hook 'lsp-completion-mode-hook
+            (lambda ()
+              (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+                    '(orderless)))))
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'at-point)
+  (lsp-ui-sideline-show-diagnostics t))
+(use-package lsp-treemacs
+  :after (lsp-mode treemacs)
+  :commands lsp-treemacs-errors-list)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -57,8 +98,8 @@
    '("b89b6d95670712b8742f4391416483a29d4315323a218600590160e132c70ec8"
      default))
  '(package-selected-packages
-   '(ef-themes evil nerd-icons nerd-icons-dired orderless tree-sitter
-	       vertico)))
+   '(corfu ef-themes evil nerd-icons nerd-icons-dired orderless
+	   tree-sitter treemacs vertico)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
