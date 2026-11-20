@@ -94,36 +94,42 @@
                    (c-or-c++-mode . c-or-c++-ts-mode)))
     (add-to-list 'major-mode-remap-alist entry)))
 
+;;; GLSL
+(use-package glsl-mode
+  :mode ("\\.glsl\\'" "\\.vert\\'" "\\.frag\\'" "\\.geom\\'"
+         "\\.tesc\\'" "\\.tese\\'" "\\.comp\\'" "\\.vs\\'"
+	 "\\.fs\\'"))
+
 ;;; LSP
 ;; Performance tuning recommended by lsp-mode
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024))
-
-(use-package lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :hook ((c-ts-mode   . lsp-deferred)
-         (c++-ts-mode . lsp-deferred)
-         (lsp-mode    . lsp-enable-which-key-integration))
-  :custom
-  (lsp-completion-provider :none) ; completion is handled by corfu + orderless
-  (lsp-clients-clangd-executable (when (eq system-type 'windows-nt) "C:/Program Files/LLVM/bin/clangd.exe"))
-  (lsp-clients-clangd-args '("--background-index"
-                             "--clang-tidy"
-                             "--header-insertion=iwyu"
-                             "--completion-style=detailed"
-                             "--compile-commands-dir=build"))
-  :config
-  (add-hook 'lsp-completion-mode-hook
-            (lambda ()
-              (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-                    '(orderless)))))
-
-(use-package lsp-ui
-  :commands lsp-ui-mode
-  :custom
-  (lsp-ui-doc-position 'at-point))
-
-(use-package lsp-treemacs
-  :after lsp-mode
-  :commands lsp-treemacs-errors-list)
+;; (setq gc-cons-threshold (* 100 1024 1024)
+;;       read-process-output-max (* 1024 1024))
+;; 
+;; (use-package lsp-mode
+;;   :init
+;;   (setq lsp-keymap-prefix "C-c l")
+;;   :hook ((c-ts-mode   . lsp-deferred)
+;;          (c++-ts-mode . lsp-deferred)
+;;          (lsp-mode    . lsp-enable-which-key-integration))
+;;   :custom
+;;   (lsp-completion-provider :none) ; completion is handled by corfu + orderless
+;;   (lsp-clients-clangd-executable (when (eq system-type 'windows-nt) "C:/Program Files/LLVM/bin/clangd.exe"))
+;;   (lsp-clients-clangd-args '("--background-index"
+;;                              "--clang-tidy"
+;;                              "--header-insertion=iwyu"
+;;                              "--completion-style=detailed"
+;;                              "--compile-commands-dir=build"))
+;;   :config
+;;   (add-hook 'lsp-completion-mode-hook
+;;             (lambda ()
+;;               (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+;;                     '(orderless)))))
+;; 
+;; (use-package lsp-ui
+;;   :commands lsp-ui-mode
+;;   :custom
+;;   (lsp-ui-doc-position 'at-point))
+;; 
+;; (use-package lsp-treemacs
+;;   :after lsp-mode
+;;   :commands lsp-treemacs-errors-list)
